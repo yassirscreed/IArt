@@ -7,6 +7,7 @@
 # 00000 Nome2
 
 import sys
+import numpy as np
 from search import (
     Problem,
     Node,
@@ -35,21 +36,36 @@ class TakuzuState:
 class Board:
     """Representação interna de um tabuleiro de Takuzu."""
 
+    def __init__(self, size, tab):
+        self.size = size
+        self.tab = tab
+
     def get_number(self, row: int, col: int) -> int:
         """Devolve o valor na respetiva posição do tabuleiro."""
         # TODO
+        return self.tab[row][col]
         pass
 
     def adjacent_vertical_numbers(self, row: int, col: int) -> (int, int):
         """Devolve os valores imediatamente abaixo e acima,
         respectivamente."""
         # TODO
+        if row == 0:
+            return (self.tab[row + 1][col], None)
+        if row == self.size-1:
+            return (None, self.tab[row - 1][col])
+        return (self.tab[row+1][col], self.tab[row-1][col])
         pass
 
     def adjacent_horizontal_numbers(self, row: int, col: int) -> (int, int):
         """Devolve os valores imediatamente à esquerda e à direita,
         respectivamente."""
         # TODO
+        if col == 0:
+            return (None, self.tab[row][col+1])
+        if col == self.size-1:
+            return (self.tab[row][col-1], None)
+        return (self.tab[row][col-1], self.tab[row][col+1])
         pass
 
     @staticmethod
@@ -64,7 +80,27 @@ class Board:
             > stdin.readline()
         """
         # TODO
+        # Guarda o tamanha da matrix no self.size e a lista de listas (matriz) no tab e da return da instancia do board
+        lines = sys.stdin.readlines()
+        N = int(lines[0])
+        tab = []
+        for line in lines[1:]:
+            aux = ([int(n) for n in line.split()])
+            tab.append(aux)
+        board = Board(N, tab)
+        return board
         pass
+
+    # Parecido ao str override do Java mete tudo bonitinho
+    def __str__(self):
+        tab = ""
+
+        for i in range(self.size):
+            for j in range(self.size):
+                tab += str(self.tab[i][j]) + "\t"
+            tab += "\n"
+        tab = tab.strip("\n")
+        return tab
 
     # TODO: outros metodos da classe
 
@@ -110,4 +146,12 @@ if __name__ == "__main__":
     # Usar uma técnica de procura para resolver a instância,
     # Retirar a solução a partir do nó resultante,
     # Imprimir para o standard output no formato indicado.
+    board = Board.parse_instance_from_stdin()
+    print(board)
+    print(board.adjacent_vertical_numbers(3, 3))
+    print(board.adjacent_horizontal_numbers(3, 3))
+
+    print(board.adjacent_vertical_numbers(1, 1))
+    print(board.adjacent_horizontal_numbers(1, 1))
+
     pass
