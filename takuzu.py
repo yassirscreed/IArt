@@ -2,11 +2,12 @@
 # Devem alterar as classes e funções neste ficheiro de acordo com as instruções do enunciado.
 # Além das funções e classes já definidas, podem acrescentar outras que considerem pertinentes.
 
-# Grupo 00:
-# 00000 Nome1
-# 00000 Nome2
+# Grupo 52:
+# 99130 Vasco Brito
+# 100611 Yassir Mahomed Yassin
 
 import sys
+from types import new_class
 import numpy as np
 from search import (
     Problem,
@@ -91,8 +92,89 @@ class Board:
         return board
         pass
 
-    # Parecido ao str override do Java mete tudo bonitinho
+    def clone_board(self):
+        new_tab = np.copy(self.tab)
+        new_num = int(self.size)
+
+        new_board = Board(new_num, new_tab)
+
+        return new_board
+
+    def play(self, linha, coluna, num):
+        # faz a jogada do numero num na linha e coluna especificada
+        if self.get_number(linha, coluna) == 2:
+            self.tab[linha][coluna] = num
+        return
+
+    def empty_spaces(self):
+        # returns a list with all indexes containing empty spaces
+        l = []
+
+        for i in range(self.size):  # linha
+            for j in range(self.size):  # col
+                if self.get_number(i, j) == 2:
+                    l.append([i, j])
+        return l
+
+    def filled_board(self):
+
+        for i in range(self.size):  # linha
+            for j in range(self.size):  # col
+                if self.get_number(i, j) == 2:
+                    return False
+        return True
+
+    def linha_valida(self, i):
+        num_0s = 0
+        num_1s = 0
+        max = self.size/2
+        linha = self.tab[i]
+
+        for num in linha:
+            if num == 0:
+                num_0s += 1
+            if num == 1:
+                num_1s += 1
+        if num_0s > max or num_1s > max:
+            return False
+        return True
+
+    def col_valida(self, i):
+        num_0s = 0
+        num_1s = 0
+        max = self.size/2
+        coluna = [row[i] for row in self.tab]
+
+        for num in coluna:
+            if num == 0:
+                num_0s += 1
+            if num == 1:
+                num_1s += 1
+        if num_0s > max or num_1s > max:
+            return False
+        return True
+
+    def linhas_unicas(self):
+        check = True
+        for i in range(self.size):
+            count = self.tab.count(self.tab[i])
+            if count != 1:
+                check = False
+        return check
+
+    def colunas_unicas(self):
+        check = True
+        colunas = []
+        for i in range(self.size):
+            colunas.append([row[i] for row in self.tab])
+        for i in range(self.size):
+            count = colunas.count(colunas[i])
+            if count != 1:
+                check = False
+        return check
+
     def __str__(self):
+        # Parecido ao str override do Java mete tudo bonitinho
         tab = ""
 
         for i in range(self.size):
@@ -109,6 +191,8 @@ class Takuzu(Problem):
     def __init__(self, board: Board):
         """O construtor especifica o estado inicial."""
         # TODO
+
+        super().__init__(TakuzuState(board))
         pass
 
     def actions(self, state: TakuzuState):
@@ -123,6 +207,13 @@ class Takuzu(Problem):
         das presentes na lista obtida pela execução de
         self.actions(state)."""
         # TODO
+
+        board_aux = state.board.clone_board()
+
+        board_aux.play(action[0], action[1], action[2])
+
+        return TakuzuState(board_aux)
+
         pass
 
     def goal_test(self, state: TakuzuState):
@@ -146,12 +237,21 @@ if __name__ == "__main__":
     # Usar uma técnica de procura para resolver a instância,
     # Retirar a solução a partir do nó resultante,
     # Imprimir para o standard output no formato indicado.
-    board = Board.parse_instance_from_stdin()
-    print(board)
-    print(board.adjacent_vertical_numbers(3, 3))
-    print(board.adjacent_horizontal_numbers(3, 3))
+   # board = Board.parse_instance_from_stdin()
+    #board.play(0, 1, 1)
+   # board1 = board.clone_board()
+   # print(board)
+   # print('\n')
 
-    print(board.adjacent_vertical_numbers(1, 1))
-    print(board.adjacent_horizontal_numbers(1, 1))
+  #  print(board.colunas_unicas())
+
+   # print('\n')
+   # print(board)
+   # print(board.empty_spaces())
+   # print(board.adjacent_vertical_numbers(3, 3))
+    #print(board.adjacent_horizontal_numbers(3, 3))
+
+    #print(board.adjacent_vertical_numbers(1, 1))
+    #print(board.adjacent_horizontal_numbers(1, 1))
 
     pass
