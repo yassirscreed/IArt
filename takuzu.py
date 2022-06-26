@@ -304,9 +304,4 @@ if __name__ == "__main__":
    # print("Is goal?", problem.goal_test(s9))
    # print("Solution:\n", s9.board, sep="")
 
-    #actions = problem.actions(initial_state)
-  #  print(actions)
-   # print('\n')
-  #  print(initial_state.board)
-
     pass
