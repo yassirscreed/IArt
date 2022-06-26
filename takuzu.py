@@ -73,10 +73,8 @@ class Board:
     def parse_instance_from_stdin():
         """Lê o test do standard input (stdin) que é passado como argumento
         e retorna uma instância da classe Board.
-
         Por exemplo:
             $ python3 takuzu.py < input_T01
-
             > from sys import stdin
             > stdin.readline()
         """
@@ -102,8 +100,7 @@ class Board:
 
     def play(self, linha, coluna, num):
         # faz a jogada do numero num na linha e coluna especificada
-        if self.get_number(linha, coluna) == 2:
-            self.tab[linha][coluna] = num
+        self.tab[linha][coluna] = num
         return
 
     def empty_spaces(self):
@@ -124,40 +121,71 @@ class Board:
                     return False
         return True
 
-    def linha_valida(self, i):
-        num_0s = 0
-        num_1s = 0
-        max = self.size/2
-        linha = self.tab[i]
-
-        for num in linha:
-            if num == 0:
-                num_0s += 1
-            if num == 1:
-                num_1s += 1
-        if num_0s > max or num_1s > max:
+    def valid_row(self, row):
+        current = 2
+        count = 0
+        zeros = 0
+        ones = 0
+        for i in range(self.size):
+            if count == 3:
+                return False
+            if self.tab[row][i] == 1:
+                if current == 1:
+                    count += 1
+                else:
+                    current = 1
+                    count = 1
+                ones += 1
+            elif self.tab[row][i] == 0:
+                if current == 0:
+                    count += 1
+                else:
+                    current = 0
+                    count = 1
+                zeros += 1
+            else:
+                count = 0
+        if zeros > self.size/2 or ones > self.size/2:
             return False
         return True
 
-    def col_valida(self, i):
-        num_0s = 0
-        num_1s = 0
-        max = self.size/2
-        coluna = [row[i] for row in self.tab]
-
-        for num in coluna:
-            if num == 0:
-                num_0s += 1
-            if num == 1:
-                num_1s += 1
-        if num_0s > max or num_1s > max:
+    def valid_col(self, col):
+        current = 2
+        count = 0
+        zeros = 0
+        ones = 0
+        for i in range(self.size):
+            if count == 3:
+                return False
+            if self.tab[i][col] == 1:
+                if current == 1:
+                    count += 1
+                else:
+                    current = 1
+                    count = 1
+                ones += 1
+            elif self.tab[i][col] == 0:
+                if current == 0:
+                    count += 1
+                else:
+                    current = 0
+                    count = 1
+                zeros += 1
+            else:
+                count = 0
+        if zeros > self.size/2 or ones > self.size/2:
             return False
         return True
 
     def linhas_unicas(self):
         check = True
+        linhas = []
         for i in range(self.size):
-            count = self.tab.count(self.tab[i])
+            linha = list(self.tab[i])
+            if 2 not in linha:
+                linhas.append(linha)
+        for i in range(len(linhas)):
+            count = linhas.count(linhas[i])
             if count != 1:
                 check = False
         return check
@@ -166,8 +194,10 @@ class Board:
         check = True
         colunas = []
         for i in range(self.size):
-            colunas.append([row[i] for row in self.tab])
-        for i in range(self.size):
+            coluna = [row[i] for row in self.tab]
+            if 2 not in coluna:
+                colunas.append(coluna)
+        for i in range(len(colunas)):
             count = colunas.count(colunas[i])
             if count != 1:
                 check = False
@@ -198,6 +228,20 @@ class Takuzu(Problem):
     def actions(self, state: TakuzuState):
         """Retorna uma lista de ações que podem ser executadas a
         partir do estado passado como argumento."""
+
+        actions = []
+        board_aux = state.board.clone_board()
+        for i in range(board_aux.size):
+            for j in range(board_aux.size):
+                for k in (0, 1):
+                    n = board_aux.get_number(i, j)
+                    if n == 2:
+                        board_aux.play(i, j, k)
+                        if (board_aux.linhas_unicas() and board_aux.colunas_unicas and
+                                board_aux.valid_col(j) and board_aux.valid_row(i)):
+                            actions.append((i, j, k))
+                        board_aux.play(i, j, 2)
+        return actions
         # TODO
         pass
 
@@ -221,6 +265,9 @@ class Takuzu(Problem):
         um estado objetivo. Deve verificar se todas as posições do tabuleiro
         estão preenchidas com uma sequência de números adjacentes."""
         # TODO
+
+        return state.board.filled_board()
+
         pass
 
     def h(self, node: Node):
@@ -233,25 +280,33 @@ class Takuzu(Problem):
 
 if __name__ == "__main__":
     # TODO:
-    # Ler o ficheiro do standard input,
-    # Usar uma técnica de procura para resolver a instância,
-    # Retirar a solução a partir do nó resultante,
-    # Imprimir para o standard output no formato indicado.
-   # board = Board.parse_instance_from_stdin()
-    #board.play(0, 1, 1)
-   # board1 = board.clone_board()
-   # print(board)
+    #board = Board.parse_instance_from_stdin()
+    #print("Initial:\n", board, sep="")
+    # Criar uma instância de Takuzu:
+    #problem = Takuzu(board)
+    # Criar um estado com a configuração inicial:
+   # s0 = TakuzuState(board)
+   # print("Initial:\n", s0.board, sep="")
+   # actions = problem.actions(s0)
+  #  print(actions)
    # print('\n')
+    # Aplicar as ações que resolvem a instância
+  #  s1 = problem.result(s0, (0, 0, 0))
+   # s2 = problem.result(s1, (0, 2, 1))
+    #s3 = problem.result(s2, (1, 0, 1))
+    #s4 = problem.result(s3, (1, 1, 0))
+   # s5 = problem.result(s4, (1, 3, 1))
+   # s6 = problem.result(s5, (2, 0, 0))
+   # s7 = problem.result(s6, (2, 2, 1))
+   # s8 = problem.result(s7, (2, 3, 1))
+   # s9 = problem.result(s8, (3, 2, 0))
+    # Verificar se foi atingida a solução
+   # print("Is goal?", problem.goal_test(s9))
+   # print("Solution:\n", s9.board, sep="")
 
-  #  print(board.colunas_unicas())
-
+    #actions = problem.actions(initial_state)
+  #  print(actions)
    # print('\n')
-   # print(board)
-   # print(board.empty_spaces())
-   # print(board.adjacent_vertical_numbers(3, 3))
-    #print(board.adjacent_horizontal_numbers(3, 3))
-
-    #print(board.adjacent_vertical_numbers(1, 1))
-    #print(board.adjacent_horizontal_numbers(1, 1))
+  #  print(initial_state.board)
 
     pass
