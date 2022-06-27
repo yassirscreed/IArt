@@ -6,6 +6,7 @@
 # 99130 Vasco Brito
 # 100611 Yassir Mahomed Yassin
 
+from ctypes import sizeof
 import sys
 from types import new_class
 import numpy as np
@@ -91,9 +92,14 @@ class Board:
         pass
 
     def clone_board(self):
-        new_tab = np.copy(self.tab)
         new_num = int(self.size)
 
+        new_tab = []
+        for i in range(self.size):
+            new_tab.append([])
+            for j in range(self.size):
+                new_tab[i].append(self.tab[i][j])
+        
         new_board = Board(new_num, new_tab)
 
         return new_board
@@ -127,8 +133,6 @@ class Board:
         zeros = 0
         ones = 0
         for i in range(self.size):
-            if count == 3:
-                return False
             if self.tab[row][i] == 1:
                 if current == 1:
                     count += 1
@@ -145,7 +149,9 @@ class Board:
                 zeros += 1
             else:
                 count = 0
-        if zeros > self.size/2 or ones > self.size/2:
+            if count == 3:
+                return False
+        if zeros > self.size/2 + 0.5 or ones > self.size/2 + 0.5:
             return False
         return True
 
@@ -155,8 +161,6 @@ class Board:
         zeros = 0
         ones = 0
         for i in range(self.size):
-            if count == 3:
-                return False
             if self.tab[i][col] == 1:
                 if current == 1:
                     count += 1
@@ -173,7 +177,9 @@ class Board:
                 zeros += 1
             else:
                 count = 0
-        if zeros > self.size/2 or ones > self.size/2:
+            if count == 3:
+                return False
+        if zeros > self.size/2 + 0.5 or ones > self.size/2 + 0.5:
             return False
         return True
 
@@ -228,20 +234,39 @@ class Takuzu(Problem):
     def actions(self, state: TakuzuState):
         """Retorna uma lista de ações que podem ser executadas a
         partir do estado passado como argumento."""
-
-        actions = []
-        board_aux = state.board.clone_board()
-        for i in range(board_aux.size):
-            for j in range(board_aux.size):
-                for k in (0, 1):
-                    n = board_aux.get_number(i, j)
+        def actions_aux(board):
+            for i in range(board.size):
+                for j in range(board.size):
+                    n = board.get_number(i, j)
                     if n == 2:
-                        board_aux.play(i, j, k)
-                        if (board_aux.linhas_unicas() and board_aux.colunas_unicas and
-                                board_aux.valid_col(j) and board_aux.valid_row(i)):
-                            actions.append((i, j, k))
-                        board_aux.play(i, j, 2)
-        return actions
+                        for k in (0, 1):
+                            l = 1 if k == 0 else 0
+                            board.play(i, j, k)
+                            if not board.valid_row(i):
+                                return [(i, j, l)]
+                            if not board.valid_col(j):
+                                return [(i, j, l)]
+                            if not board.linhas_unicas():
+                                return [(i, j, l)]
+                            if not board.colunas_unicas():
+                                return [(i, j, l)]
+                            board.play(i, j, 2)
+            return False
+        board = state.board
+        play = actions_aux(board)
+        if play:
+            return play
+        for i in range(board.size):
+            for j in range(board.size):
+                n = board.get_number(i, j)
+                if n == 2:
+                    for k in (0, 1):
+                        board.play(i, j, k)
+                        play = actions_aux(board)
+                        if play:
+                            return play
+                        board.play(i, j, 2)
+        
         # TODO
         pass
 
@@ -264,10 +289,15 @@ class Takuzu(Problem):
         """Retorna True se e só se o estado passado como argumento é
         um estado objetivo. Deve verificar se todas as posições do tabuleiro
         estão preenchidas com uma sequência de números adjacentes."""
+
+        board = state.board
+        if not (board.linhas_unicas() and board.colunas_unicas() and board.filled_board()):
+            return False
+        for i in range(board.size):
+            if not (board.valid_col(i) and board.valid_row(i)):
+                return False
+        return True
         # TODO
-
-        return state.board.filled_board()
-
         pass
 
     def h(self, node: Node):
@@ -280,28 +310,12 @@ class Takuzu(Problem):
 
 if __name__ == "__main__":
     # TODO:
-    #board = Board.parse_instance_from_stdin()
-    #print("Initial:\n", board, sep="")
+    board = Board.parse_instance_from_stdin()
     # Criar uma instância de Takuzu:
-    #problem = Takuzu(board)
-    # Criar um estado com a configuração inicial:
-   # s0 = TakuzuState(board)
-   # print("Initial:\n", s0.board, sep="")
-   # actions = problem.actions(s0)
-  #  print(actions)
-   # print('\n')
-    # Aplicar as ações que resolvem a instância
-  #  s1 = problem.result(s0, (0, 0, 0))
-   # s2 = problem.result(s1, (0, 2, 1))
-    #s3 = problem.result(s2, (1, 0, 1))
-    #s4 = problem.result(s3, (1, 1, 0))
-   # s5 = problem.result(s4, (1, 3, 1))
-   # s6 = problem.result(s5, (2, 0, 0))
-   # s7 = problem.result(s6, (2, 2, 1))
-   # s8 = problem.result(s7, (2, 3, 1))
-   # s9 = problem.result(s8, (3, 2, 0))
-    # Verificar se foi atingida a solução
-   # print("Is goal?", problem.goal_test(s9))
-   # print("Solution:\n", s9.board, sep="")
+    problem = Takuzu(board)
+    # Obter o nó solução usando a procura em profundidade:
+    goal_node = depth_first_tree_search(problem)
+    
+    print(goal_node.state.board)
 
     pass
