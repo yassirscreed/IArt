@@ -19,6 +19,7 @@ from search import (
     greedy_search,
     recursive_best_first_search,
 )
+from utils import element_wise_product
 
 
 class TakuzuState:
@@ -99,7 +100,7 @@ class Board:
             new_tab.append([])
             for j in range(self.size):
                 new_tab[i].append(self.tab[i][j])
-
+        
         new_board = Board(new_num, new_tab)
 
         return new_board
@@ -216,8 +217,8 @@ class Board:
         for i in range(self.size):
             for j in range(self.size):
                 tab += str(self.tab[i][j]) + "\t"
-            tab = tab.strip("\t")
             tab += "\n"
+            tab = tab.strip("\t")
         tab = tab.strip("\n")
         return tab
 
@@ -232,10 +233,11 @@ class Takuzu(Problem):
         super().__init__(TakuzuState(board))
         pass
 
-    def actions(self, state: TakuzuState):
-        """Retorna uma lista de ações que podem ser executadas a
-        partir do estado passado como argumento."""
+    """def actionss(self, state: TakuzuState):
+        """"""Retorna uma lista de ações que podem ser executadas a
+        partir do estado passado como argumento.""""""""
         def actions_aux(board):
+            board = board.clone_board()
             for i in range(board.size):
                 for j in range(board.size):
                     n = board.get_number(i, j)
@@ -261,13 +263,80 @@ class Takuzu(Problem):
             for j in range(board.size):
                 n = board.get_number(i, j)
                 if n == 2:
+                    #board.play(i, j, 0)
+                    #play = self.actions(state)
+                    #board.play(i, j, 1)
+                    #play_other = self.actions(state)
+                    #board.play(i, j, 2)
+                    #if play and not play_other:
+                    #    return play
+                    #if play_other and not play:
+                    #    return play_other
+                    board.play(i, j, 0)
+                    play = self.actions(state)
+                    board.play(play[1][1], play[1][2], play[1][3])
+                    if 
+        
+        # TODO
+        pass"""
+    
+    def actions(self, state: TakuzuState):
+        """Retorna uma lista de ações que podem ser executadas a
+        partir do estado passado como argumento."""""
+        def is_valid(board, row, col):
+            if not board.valid_row(row):
+                return False
+            if not board.valid_col(col):
+                return False
+            if not board.linhas_unicas():
+                return False
+            if not board.colunas_unicas():
+                return False
+            return True
+        board = state.board
+        for i in range(board.size):
+            for j in range(board.size):
+                n = board.get_number(i, j)
+                if n == 2:
                     for k in (0, 1):
+                        l = 1 if k == 0 else 0
                         board.play(i, j, k)
-                        play = actions_aux(board)
-                        if play:
-                            return play
+                        if not is_valid(board, i, j):
+                            board.play(i, j, l)
+                            if is_valid(board, i, j):
+                                board.play(i, j, 2)
+                                return [(i, j, l)]
+                            board.play(i, j, 2)
+                            return False
                         board.play(i, j, 2)
-
+        for i in range(board.size):
+            for j in range(board.size):
+                n = board.get_number(i, j)
+                if n == 2:
+                    for k in (0, 1):
+                        l = 1 if k == 0 else 0
+                        board.play(i, j, k)
+                        play = self.actions(state)
+                        if not play:
+                            board.play(i, j, l)
+                            play = self.actions(state)
+                            return play
+                        return play
+                    
+                    #board.play(i, j, 0)
+                    #play = self.actions(state)
+                    #board.play(i, j, 1)
+                    #play_other = self.actions(state)
+                    #board.play(i, j, 2)
+                    #if play and not play_other:
+                    #    return play
+                    #if play_other and not play:
+                    #    return play_other
+                    #board.play(i, j, 0)
+                    #play = self.actions(state)
+                    #board.play(play[1][1], play[1][2], play[1][3])
+                    #if 
+        
         # TODO
         pass
 
@@ -278,11 +347,10 @@ class Takuzu(Problem):
         self.actions(state)."""
         # TODO
 
-        board_aux = state.board.clone_board()
+        board = state.board
+        board.play(action[0], action[1], action[2])
 
-        board_aux.play(action[0], action[1], action[2])
-
-        return TakuzuState(board_aux)
+        return TakuzuState(board)
 
         pass
 
@@ -292,6 +360,7 @@ class Takuzu(Problem):
         estão preenchidas com uma sequência de números adjacentes."""
 
         board = state.board
+
         if not (board.linhas_unicas() and board.colunas_unicas() and board.filled_board()):
             return False
         for i in range(board.size):
