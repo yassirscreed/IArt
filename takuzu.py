@@ -292,7 +292,7 @@ class Takuzu(Problem):
 
         board = state.board
 
-        if board.filled_board():
+        if not board.filled_board():
             return False
         if not (board.linhas_unicas() and board.colunas_unicas()):
             return False
