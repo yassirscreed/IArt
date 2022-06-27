@@ -100,7 +100,7 @@ class Board:
             new_tab.append([])
             for j in range(self.size):
                 new_tab[i].append(self.tab[i][j])
-        
+
         new_board = Board(new_num, new_tab)
 
         return new_board
@@ -217,8 +217,7 @@ class Board:
         for i in range(self.size):
             for j in range(self.size):
                 tab += str(self.tab[i][j]) + "\t"
-            tab += "\n"
-            tab = tab.strip("\t")
+            tab = tab[:-1] + '\n'
         tab = tab.strip("\n")
         return tab
 
@@ -232,7 +231,7 @@ class Takuzu(Problem):
 
         super().__init__(TakuzuState(board))
         pass
-    
+
     def actions(self, state: TakuzuState):
         """Retorna uma lista de ações que podem ser executadas a
         partir do estado passado como argumento."""
@@ -318,7 +317,7 @@ if __name__ == "__main__":
     problem = Takuzu(board)
     # Obter o nó solução usando a procura em profundidade:
     goal_node = depth_first_tree_search(problem)
-    
+
     print(goal_node.state.board)
 
     pass
