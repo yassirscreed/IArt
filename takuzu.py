@@ -99,7 +99,7 @@ class Board:
             new_tab.append([])
             for j in range(self.size):
                 new_tab[i].append(self.tab[i][j])
-        
+
         new_board = Board(new_num, new_tab)
 
         return new_board
@@ -216,6 +216,7 @@ class Board:
         for i in range(self.size):
             for j in range(self.size):
                 tab += str(self.tab[i][j]) + "\t"
+            tab = tab.strip("\t")
             tab += "\n"
         tab = tab.strip("\n")
         return tab
@@ -266,7 +267,7 @@ class Takuzu(Problem):
                         if play:
                             return play
                         board.play(i, j, 2)
-        
+
         # TODO
         pass
 
@@ -315,7 +316,8 @@ if __name__ == "__main__":
     problem = Takuzu(board)
     # Obter o nó solução usando a procura em profundidade:
     goal_node = depth_first_tree_search(problem)
-    
-    print(goal_node.state.board)
+    # Verificar se foi atingida a solução
+   # print("Is goal?", problem.goal_test(goal_node.state))
+    print(goal_node.state.board, sep="")
 
     pass
