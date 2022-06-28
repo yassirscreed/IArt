@@ -6,7 +6,6 @@
 # 99130 Vasco Brito
 # 100611 Yassir Mahomed Yassin
 
-from ctypes import sizeof
 import sys
 from types import new_class
 import numpy as np
@@ -15,6 +14,7 @@ from search import (
     Node,
     astar_search,
     breadth_first_tree_search,
+    compare_searchers,
     depth_first_tree_search,
     greedy_search,
     recursive_best_first_search,
@@ -128,60 +128,61 @@ class Board:
                     return False
         return True
 
-    def valid_row(self, row):
-        current = 2
+    def no_triple_in_row(self, row, col, n, flag):
+        if flag:
+            start = col - 2 if col - 2 > 0 else 0
+            end = col + 3 if col + 2 < self.size else self.size
+        else:
+            start = 0
+            end = self.size
         count = 0
-        zeros = 0
-        ones = 0
-        for i in range(self.size):
-            if self.tab[row][i] == 1:
-                if current == 1:
-                    count += 1
-                else:
-                    current = 1
-                    count = 1
-                ones += 1
-            elif self.tab[row][i] == 0:
-                if current == 0:
-                    count += 1
-                else:
-                    current = 0
-                    count = 1
-                zeros += 1
+        for i in range(start, end):
+            if self.tab[row][i] == n:
+                count += 1
             else:
                 count = 0
             if count == 3:
                 return False
-        if zeros > self.size/2 + 0.5 or ones > self.size/2 + 0.5:
-            return False
         return True
 
-    def valid_col(self, col):
-        current = 2
+    def no_triple_in_col(self, row, col, n, flag):
+        if flag:
+            start = row - 2 if row - 2 > 0 else 0
+            end = row + 3 if row + 2 < self.size else self.size
+        else:
+            start = 0
+            end = self.size
         count = 0
-        zeros = 0
-        ones = 0
-        for i in range(self.size):
-            if self.tab[i][col] == 1:
-                if current == 1:
-                    count += 1
-                else:
-                    current = 1
-                    count = 1
-                ones += 1
-            elif self.tab[i][col] == 0:
-                if current == 0:
-                    count += 1
-                else:
-                    current = 0
-                    count = 1
-                zeros += 1
+        for i in range(start, end):
+            if self.tab[i][col] == n:
+                count += 1
             else:
                 count = 0
             if count == 3:
                 return False
-        if zeros > self.size/2 + 0.5 or ones > self.size/2 + 0.5:
-            return False
+        return True
+
+    def valid_row(self, row, n):
+        count = 0
+        max = self.size/2 + 0.5
+        for i in range(self.size):
+            if self.tab[row][i] == n:
+                count += 1
+            if count > max:
+                return False
+        return True
+
+    def valid_row_both(self, board, row):
+        return board.valid_row(row, 0) and board.valid_row(row, 1)
+
+    def valid_col(self, col, n):
+        count = 0
+        max = self.size/2 + 0.5
+        for i in range(self.size):
+            if self.tab[i][col] == n:
+                count += 1
+            if count > max:
+                return False
         return True
 
     def linhas_unicas(self):
@@ -235,10 +236,14 @@ class Takuzu(Problem):
     def actions(self, state: TakuzuState):
         """Retorna uma lista de ações que podem ser executadas a
         partir do estado passado como argumento."""
-        def is_valid(board, row, col):
-            if not board.valid_row(row):
+        def is_valid(board, row, col, n):
+            if not board.no_triple_in_row(row, col, n, True):
                 return False
-            if not board.valid_col(col):
+            if not board.no_triple_in_col(row, col, n, True):
+                return False
+            if not board.valid_row(row, n):
+                return False
+            if not board.valid_col(col, n):
                 return False
             if not board.linhas_unicas():
                 return False
@@ -246,26 +251,27 @@ class Takuzu(Problem):
                 return False
             return True
         board = state.board.clone_board()
+        last_i = -1
+        last_j = 0
         for i in range(board.size):
             for j in range(board.size):
                 n = board.get_number(i, j)
                 if n == 2:
                     board.play(i, j, 0)
-                    valid_0 = is_valid(board, i, j)
+                    valid_0 = is_valid(board, i, j, 0)
                     board.play(i, j, 1)
-                    valid_1 = is_valid(board, i, j)
+                    valid_1 = is_valid(board, i, j, 1)
                     board.play(i, j, 2)
                     if not (valid_0 and valid_1):
                         if not valid_0:
                             return [(i, j, 1)]
                         if not valid_1:
                             return [(i, j, 0)]
-        board = state.board.clone_board()
-        for i in range(board.size):
-            for j in range(board.size):
-                n = board.get_number(i, j)
-                if n == 2:
-                    return [(i, j, 0), (i, j, 1)]
+                    else:
+                        last_i = i
+                        last_j = j
+        if last_i != -1:
+            return [(last_i, last_j, 0), (last_i, last_j, 1)]
         return []
 
         # TODO
@@ -292,12 +298,28 @@ class Takuzu(Problem):
 
         board = state.board
 
-        if board.filled_board():
+        if not board.filled_board():
             return False
-        if not (board.linhas_unicas() and board.colunas_unicas()):
+        if not board.linhas_unicas():
+            return False
+        if not board.colunas_unicas():
             return False
         for i in range(board.size):
-            if not (board.valid_col(i) and board.valid_row(i)):
+            if not board.no_triple_in_col(0, i, 0, False):
+                return False
+            if not board.no_triple_in_col(0, i, 1, False):
+                return False
+            if not board.no_triple_in_row(i, 0, 0, False):
+                return False
+            if not board.no_triple_in_row(i, 0, 1, False):
+                return False
+            if not board.valid_col(i, 0):
+                return False
+            if not board.valid_col(i, 1):
+                return False
+            if not board.valid_row(i, 0):
+                return False
+            if not board.valid_row(i, 1):
                 return False
         return True
         # TODO
